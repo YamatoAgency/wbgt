@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>WBGT（暑さ指数）ウィジェット</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      transition: background-color 0.5s;
+    }
+    .wbgt-value {
+      font-size: 5em;
+      margin: 20px 0;
+    }
+    .timestamp {
+      font-size: 1.2em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>現在のWBGT（暑さ指数）</h1>
+  <div class="wbgt-value" id="wbgt">--</div>
+  <div class="timestamp" id="time">読み込み中...</div>
+
+  <script>
+    const pointId = "61286"; // 観測点IDを指定
+
+    async function fetchWBGT() {
+      const url = `https://www.wbgt.env.go.jp/graph_temp_data.php?point=${pointId}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const hours = data.hour;
+        const wbgt = data.wbgt;
+
+        const now = new Date();
+        const hour = now.getHours().toString().padStart(2, '0');
+        const index = hours.indexOf(hour);
+
+        const currentWBGT = index !== -1 ? wbgt[index] : null;
+
+        if (currentWBGT !== null) {
+          document.getElementById("wbgt").textContent = currentWBGT;
+          document.getElementById("time").textContent = `${hour}:00 時点のデータ`;
+
+          // 背景色の変更
+          const body = document.body;
+          if (currentWBGT >= 31) {
+            body.style.backgroundColor = "#ff4c4c"; // 危険
+          } else if (currentWBGT >= 28) {
+            body.style.backgroundColor = "#ff9900"; // 厳重警戒
+          } else if (currentWBGT >= 25) {
+            body.style.backgroundColor = "#ffff66"; // 警戒
+          } else {
+            body.style.backgroundColor = "#66ccff"; // 注意
+          }
+        } else {
+          document.getElementById("wbgt").textContent = "データなし";
+          document.getElementById("time").textContent = `${hour}:00 時点のデータがありません`;
+        }
+      } catch (error) {
+        document.getElementById("wbgt").textContent = "エラー";
+        document.getElementById("time").textContent = "データ取得に失敗しました";
+        console.error("データ取得エラー:", error);
+      }
+    }
+
+    fetchWBGT();
+    // 必要に応じて定期的に更新
+    // setInterval(fetchWBGT, 300000); // 5分ごとに更新
+  </script>
+</body>
+</html>
