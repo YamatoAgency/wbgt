@@ -93,13 +93,20 @@ function fetchKyotoData() {
   });
 }
 
-// 実況値データを取得する関数
-function fetchActualData() {
+// 実測値データを取得する関数
+function fetchMonitorData() {
   return new Promise((resolve, reject) => {
-    // 年月を指定してCSVを取得（京都: 61286）
-    const url = `https://www.wbgt.env.go.jp/est15WG/dl/wbgt_61286_${year}${month}.csv`;
+    // 京都の実測値データを取得
+    // 環境省マニュアルp.4のTable 1から確認可能
+    // 修正前: const url = `https://www.wbgt.env.go.jp/mntr/dl/Kyoto_${year}${month}.csv`;
+    // 修正後: 現在の年月を正確に取得して使用
+    const now = new Date();
+    const currentYear = now.getFullYear();  // 例: 2025
+    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');  // 例: "05"
     
-    console.log(`Fetching actual data from: ${url}`);
+    const url = `https://www.wbgt.env.go.jp/mntr/dl/Kyoto_${currentYear}${currentMonth}.csv`;
+    
+    console.log(`Fetching monitor data from: ${url}`);
     
     https.get(url, (res) => {
       if (res.statusCode !== 200) {
