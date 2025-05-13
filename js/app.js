@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // DOM要素の取得
   const locationElement = document.getElementById('location');
   const timestampElement = document.getElementById('timestamp');
+  const dataSourceElement = document.getElementById('data-source');
   const currentWbgtElement = document.getElementById('current-wbgt');
   const wbgtLevelElement = document.getElementById('wbgt-level');
   const wbgtAdviceElement = document.getElementById('wbgt-advice');
@@ -26,6 +27,12 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       const data = await response.json();
+      
+      // エラーがある場合は表示
+      if (data.error) {
+        throw new Error(data.errorMessage || 'データの取得に失敗しました');
+      }
+      
       displayWBGT(data);
     } catch (error) {
       console.error('Error fetching WBGT data:', error);
@@ -40,28 +47,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const updateTime = new Date(data.updateTime);
     timestampElement.textContent = `最終更新: ${formatDate(updateTime)}`;
     
+    // データソースの表示
+    if (data.dataSource) {
+      dataSourceElement.textContent = `データソース: ${data.dataSource}`;
+      dataSourceElement.style.display = 'inline-block';
+    } else {
+      dataSourceElement.style.display = 'none';
+    }
+    
     // 最新のWBGT値を取得
-    let currentWbgt = null;
-    
-    // 実況値がある場合はそれを使用
-    if (data.actual && data.actual.actualValues && data.actual.actualValues.length > 0) {
-      // 値が存在する最新の実況値を探す
-      for (let i = data.actual.actualValues.length - 1; i >= 0; i--) {
-        if (data.actual.actualValues[i].wbgt !== null) {
-          currentWbgt = data.actual.actualValues[i].wbgt;
-          break;
-        }
-      }
-    }
-    
-    // 実況値がない場合は予測値を使用
-    if (currentWbgt === null && data.prediction && data.prediction.predictions && data.prediction.predictions.length > 0) {
-      currentWbgt = data.prediction.predictions[0].wbgt;
-    }
+    const currentWbgt = data.currentWbgt;
     
     // WBGT値がない場合
     if (currentWbgt === null) {
       currentWbgtElement.innerHTML = '<p>現在の暑さ指数データがありません</p>';
+      wbgtLevelElement.innerHTML = '';
+      wbgtAdviceElement.innerHTML = '';
       return;
     }
     
@@ -76,23 +77,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (currentWbgt < 21) {
       level = "ほぼ安全";
       levelClass = "level-safe";
-      advice = "熱中症の危険性は低いですが、激しい運動時は水分補給を忘れないようにしましょう。";
+      advice = "熱中症の危険性は低いですが、激しい運動時は水分補給を忘れないようにしましょう。運動時の水分補給を心がけてください。";
     } else if (currentWbgt < 25) {
       level = "注意";
       levelClass = "level-caution";
-      advice = "熱中症の危険性があります。運動時は定期的に休憩を取り、こまめに水分補給をしましょう。";
+      advice = "熱中症の危険性があります。運動時は定期的に休憩を取り、こまめに水分補給をしましょう。激しい運動や長時間の屋外活動時には特に注意が必要です。";
     } else if (currentWbgt < 28) {
       level = "警戒";
       levelClass = "level-warning";
-      advice = "熱中症の危険性が高まっています。激しい運動は避け、屋外での長時間の活動は控えましょう。";
+      advice = "熱中症の危険性が高まっています。激しい運動は避け、屋外での長時間の活動は控えましょう。30分おきに休憩を取り、水分と塩分をこまめに補給してください。特に高齢者や子どもは注意が必要です。";
     } else if (currentWbgt < 31) {
       level = "厳重警戒";
       levelClass = "level-danger";
-      advice = "熱中症の危険性が非常に高いです。外出は避け、涼しい場所で過ごしましょう。特に高齢者や子供は注意が必要です。";
+      advice = "熱中症の危険性が非常に高いです。外出は避け、涼しい場所で過ごしましょう。どうしても外出が必要な場合は、日陰を選び、帽子や日傘を使用し、こまめに水分を摂取してください。エアコン等を活用し、暑さを避けることが重要です。";
     } else {
       level = "危険";
       levelClass = "level-extreme";
-      advice = "熱中症の危険性が極めて高いです。屋外での活動は原則中止しましょう。室内でも室温の上昇に注意し、水分をこまめに摂取してください。";
+      advice = "熱中症の危険性が極めて高いです。屋外での活動は原則中止しましょう。涼しい室内で過ごし、外出は避けてください。室内でも室温の上昇に注意し、エアコン等を使って温度調節をし、水分をこまめに摂取してください。体調が悪くなった場合は、すぐに医療機関を受診してください。";
     }
     
     // レベルの表示
@@ -104,22 +105,30 @@ document.addEventListener('DOMContentLoaded', function() {
       <p>${advice}</p>
     `;
     
-    // 予測グラフの表示
+    // 予測データを表示
+    displayForecastData(data);
+    
+    // エラーメッセージを非表示
+    errorMessageElement.style.display = 'none';
+  }
+  
+  // 予測データを表示する関数
+  function displayForecastData(data) {
+    // 予測データが存在するか確認
     if (data.prediction && data.prediction.predictions && data.prediction.predictions.length > 0) {
+      // 予測グラフを表示
       displayForecastChart(data.prediction.predictions);
       forecastElement.style.display = 'block';
     } else {
       forecastElement.style.display = 'none';
     }
-    
-    // エラーメッセージを非表示
-    errorMessageElement.style.display = 'none';
   }
   
   // 予測グラフを表示する関数
   function displayForecastChart(predictions) {
     const labels = [];
     const data = [];
+    const backgroundColors = [];
     
     // 予測データを整形
     predictions.forEach(pred => {
@@ -129,6 +138,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const hour = timeStr.substring(8, 10);
         labels.push(`${hour}:00`);
         data.push(pred.wbgt);
+        
+        // WBGTレベルに応じた色を設定
+        let color;
+        if (pred.wbgt < 21) {
+          color = 'rgba(144, 238, 144, 0.8)'; // level-safe
+        } else if (pred.wbgt < 25) {
+          color = 'rgba(255, 255, 0, 0.8)'; // level-caution
+        } else if (pred.wbgt < 28) {
+          color = 'rgba(255, 165, 0, 0.8)'; // level-warning
+        } else if (pred.wbgt < 31) {
+          color = 'rgba(255, 69, 0, 0.8)'; // level-danger
+        } else {
+          color = 'rgba(128, 0, 0, 0.8)'; // level-extreme
+        }
+        backgroundColors.push(color);
       }
     });
     
@@ -140,18 +164,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // チャートの描画
     const ctx = document.getElementById('wbgt-chart').getContext('2d');
     window.forecastChart = new Chart(ctx, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: labels,
         datasets: [{
           label: 'WBGT予測 (°C)',
           data: data,
-          fill: false,
-          backgroundColor: '#1a6e39',
-          borderColor: '#1a6e39',
-          tension: 0.1,
-          pointRadius: 5,
-          pointHoverRadius: 7
+          backgroundColor: backgroundColors,
+          borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
+          borderWidth: 1,
+          borderRadius: 5
         }]
       },
       options: {
@@ -161,10 +183,18 @@ document.addEventListener('DOMContentLoaded', function() {
           y: {
             beginAtZero: false,
             suggestedMin: Math.max(0, Math.min(...data) - 5),
-            suggestedMax: Math.max(...data) + 5,
+            suggestedMax: Math.max(35, Math.max(...data) + 2),
             title: {
               display: true,
               text: 'WBGT (°C)'
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.1)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
             }
           }
         },
@@ -172,9 +202,28 @@ document.addEventListener('DOMContentLoaded', function() {
           tooltip: {
             callbacks: {
               label: function(context) {
-                return `WBGT: ${context.parsed.y}°C`;
+                let label = `WBGT: ${context.parsed.y}°C`;
+                
+                // WBGTレベルを追加
+                let level;
+                if (context.parsed.y < 21) {
+                  level = "ほぼ安全";
+                } else if (context.parsed.y < 25) {
+                  level = "注意";
+                } else if (context.parsed.y < 28) {
+                  level = "警戒";
+                } else if (context.parsed.y < 31) {
+                  level = "厳重警戒";
+                } else {
+                  level = "危険";
+                }
+                
+                return [label, `レベル: ${level}`];
               }
             }
+          },
+          legend: {
+            display: false
           }
         }
       }
