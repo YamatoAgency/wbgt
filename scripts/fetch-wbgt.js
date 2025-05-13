@@ -10,103 +10,18 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// 現在の日付情報を取得
-const now = new Date();
-const year = now.getFullYear();
-const month = String(now.getMonth() + 1).padStart(2, '0');
-const day = String(now.getDate()).padStart(2, '0');
-const dateStr = `${year}${month}${day}`;
-
-// 京都のデータを取得する関数
-function fetchKyotoData() {
+// 実況値データを取得する関数
+function fetchActualData() {
   return new Promise((resolve, reject) => {
-    // 京都の地点番号: 61286
-    // 環境省マニュアルの別表1から確認可能
-    const url = `https://www.wbgt.env.go.jp/prev15WG/dl/yohou_61286.csv`;
-    
-    console.log(`Fetching data from: ${url}`);
-    
-    https.get(url, (res) => {
-      if (res.statusCode !== 200) {
-        reject(new Error(`Failed to fetch data: ${res.statusCode}`));
-        return;
-      }
-      
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      
-      res.on('end', () => {
-        // データファイルを保存
-        const filePath = path.join(dataDir, 'latest_kyoto_prediction.csv');
-        fs.writeFileSync(filePath, data);
-        console.log(`Saved prediction data to ${filePath}`);
-        
-        // CSVをパースして最新のWBGT値を抽出
-        const lines = data.trim().split('\n');
-        if (lines.length >= 2) {
-          const headerLine = lines[0];
-          const dataLine = lines[1];
-          
-          // ヘッダーから日時の位置を特定
-          const headers = headerLine.split(',');
-          
-          // データ行から値を取得
-          const values = dataLine.split(',');
-          
-          // 地点番号と更新時刻
-          const pointNumber = values[0];
-          const updateTime = values[1];
-          
-          // 予測値を抽出
-          const predictions = [];
-          for (let i = 2; i < values.length; i++) {
-            if (headers[i] && values[i].trim() !== '') {
-              predictions.push({
-                time: headers[i],
-                wbgt: parseInt(values[i].trim()) / 10 // 10で割って実際の値に変換
-              });
-            }
-          }
-          
-          // JSON形式で保存
-          const jsonData = {
-            point: '京都',
-            pointNumber: pointNumber,
-            updateTime: updateTime,
-            predictions: predictions
-          };
-          
-          const jsonPath = path.join(dataDir, 'latest_kyoto_prediction.json');
-          fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
-          console.log(`Saved JSON data to ${jsonPath}`);
-          
-          resolve(jsonData);
-        } else {
-          reject(new Error('Invalid CSV format'));
-        }
-      });
-    }).on('error', (error) => {
-      reject(error);
-    });
-  });
-}
-
-// 実測値データを取得する関数
-function fetchMonitorData() {
-  return new Promise((resolve, reject) => {
-    // 京都の実測値データを取得
-    // 環境省マニュアルp.4のTable 1から確認可能
-    // 修正前: const url = `https://www.wbgt.env.go.jp/mntr/dl/Kyoto_${year}${month}.csv`;
-    // 修正後: 現在の年月を正確に取得して使用
+    // 現在の年月を取得
     const now = new Date();
-    const currentYear = now.getFullYear();  // 例: 2025
-    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');  // 例: "05"
+    const currentYear = now.getFullYear();
+    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
     
-    const url = `https://www.wbgt.env.go.jp/mntr/dl/Kyoto_${currentYear}${currentMonth}.csv`;
+    // 京都の実況値データを取得（地点番号: 61286）
+    const url = `https://www.wbgt.env.go.jp/est15WG/dl/wbgt_61286_${currentYear}${currentMonth}.csv`;
     
-    console.log(`Fetching monitor data from: ${url}`);
+    console.log(`Fetching actual data from: ${url}`);
     
     https.get(url, (res) => {
       if (res.statusCode !== 200) {
@@ -128,111 +43,79 @@ function fetchMonitorData() {
         // CSVをパースして当日のデータを抽出
         const lines = data.trim().split('\n');
         
-        // 当日のデータのみを抽出
-        const todayData = lines.filter(line => line.includes(`${year}/${parseInt(month)}/${parseInt(day)}`));
+        // 日付ごとのデータを整理
+        const dailyData = {};
         
-        // JSONに変換
-        const actualValues = todayData.map(line => {
-          const parts = line.split(',');
-          return {
-            date: parts[0],
-            time: parts[1],
-            wbgt: parts[2] ? parseFloat(parts[2]) : null
-          };
-        });
-        
-        const jsonData = {
-          point: '京都',
-          date: `${year}/${month}/${day}`,
-          actualValues: actualValues
-        };
-        
-        const jsonPath = path.join(dataDir, 'latest_kyoto_actual.json');
-        fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
-        console.log(`Saved actual JSON data to ${jsonPath}`);
-        
-        resolve(jsonData);
-      });
-    }).on('error', (error) => {
-      reject(error);
-    });
-  });
-}
-
-// 都道府県データを取得する関数（京都府内の全地点データ）
-function fetchPrefectureData() {
-  return new Promise((resolve, reject) => {
-    // 都道府県単位のデータ取得（京都府: kyoto）
-    // 環境省マニュアルの別表2から確認可能
-    const url = `https://www.wbgt.env.go.jp/prev15WG/dl/yohou_kyoto.csv`;
-    
-    console.log(`Fetching prefecture data from: ${url}`);
-    
-    https.get(url, (res) => {
-      if (res.statusCode !== 200) {
-        reject(new Error(`Failed to fetch prefecture data: ${res.statusCode}`));
-        return;
-      }
-      
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      
-      res.on('end', () => {
-        // データファイルを保存
-        const filePath = path.join(dataDir, 'latest_kyoto_prefecture.csv');
-        fs.writeFileSync(filePath, data);
-        console.log(`Saved prefecture data to ${filePath}`);
-        
-        // CSVをパースして府内全地点のデータを抽出
-        const lines = data.trim().split('\n');
-        if (lines.length >= 2) {
-          const headerLine = lines[0];
-          const headers = headerLine.split(',');
+        // ヘッダー行をスキップして2行目から処理
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(',');
+          if (parts.length < 3) continue;
           
-          // 各地点のデータを解析
-          const stations = [];
-          for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',');
-            
-            // 地点番号と更新時刻
-            const pointNumber = values[0];
-            const updateTime = values[1];
-            
-            // 予測値を抽出
-            const predictions = [];
-            for (let j = 2; j < values.length; j++) {
-              if (headers[j] && values[j].trim() !== '') {
-                predictions.push({
-                  time: headers[j],
-                  wbgt: parseInt(values[j].trim()) / 10 // 10で割って実際の値に変換
-                });
-              }
-            }
-            
-            stations.push({
-              pointNumber: pointNumber,
-              updateTime: updateTime,
-              predictions: predictions
-            });
+          const date = parts[0]; // 例: 2025/5/13
+          const time = parts[1]; // 例: 14:00
+          const wbgt = parts[2] ? parseFloat(parts[2]) : null;
+          
+          if (!dailyData[date]) {
+            dailyData[date] = [];
           }
           
-          // JSON形式で保存
-          const jsonData = {
-            prefecture: '京都府',
-            updateTime: new Date().toISOString(),
-            stations: stations
-          };
-          
-          const jsonPath = path.join(dataDir, 'latest_kyoto_prefecture.json');
-          fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
-          console.log(`Saved prefecture JSON data to ${jsonPath}`);
-          
-          resolve(jsonData);
-        } else {
-          reject(new Error('Invalid prefecture CSV format'));
+          dailyData[date].push({
+            time: time,
+            wbgt: wbgt
+          });
         }
+        
+        // JSONデータを作成
+        const jsonData = {
+          point: '京都',
+          location: '京都',
+          updateTime: new Date().toISOString(),
+          days: Object.keys(dailyData).map(date => ({
+            date: date,
+            values: dailyData[date]
+          }))
+        };
+        
+        // 最新値を取得
+        let latestWbgt = null;
+        let latestTime = null;
+        let latestDate = null;
+        
+        // 日付の降順でソート
+        const sortedDates = Object.keys(dailyData).sort().reverse();
+        
+        for (const date of sortedDates) {
+          const values = dailyData[date];
+          // 時間の降順でソート
+          const sortedValues = [...values].sort((a, b) => {
+            const timeA = a.time.split(':').map(Number);
+            const timeB = b.time.split(':').map(Number);
+            return (timeB[0] * 60 + timeB[1]) - (timeA[0] * 60 + timeA[1]);
+          });
+          
+          // 最初の有効な値を探す
+          for (const value of sortedValues) {
+            if (value.wbgt !== null) {
+              latestWbgt = value.wbgt;
+              latestTime = value.time;
+              latestDate = date;
+              break;
+            }
+          }
+          
+          if (latestWbgt !== null) break;
+        }
+        
+        // 最新値を追加
+        jsonData.latestWbgt = latestWbgt;
+        jsonData.latestTime = latestTime;
+        jsonData.latestDate = latestDate;
+        
+        const jsonPath = path.join(dataDir, 'latest_data.json');
+        fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
+        console.log(`Saved JSON data to ${jsonPath}`);
+        
+        resolve(jsonData);
       });
     }).on('error', (error) => {
       reject(error);
@@ -243,9 +126,13 @@ function fetchPrefectureData() {
 // 実測値データを取得する関数
 function fetchMonitorData() {
   return new Promise((resolve, reject) => {
+    // 現在の年月を取得
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+    
     // 京都の実測値データを取得
-    // 環境省マニュアルp.4のTable 1から確認可能
-    const url = `https://www.wbgt.env.go.jp/mntr/dl/Kyoto_${year}${month}.csv`;
+    const url = `https://www.wbgt.env.go.jp/mntr/dl/Kyoto_${currentYear}${currentMonth}.csv`;
     
     console.log(`Fetching monitor data from: ${url}`);
     
@@ -275,34 +162,75 @@ function fetchMonitorData() {
           return;
         }
         
-        // ヘッダーを取得
-        const headers = lines[0].split(',');
+        // ヘッダー行をスキップして2行目から処理
+        const dailyData = {};
         
-        // 当日のデータのみを抽出
-        const todayData = lines.filter(line => {
-          const parts = line.split(',');
-          return parts[0] && parts[0].includes(`${year}/${parseInt(month)}/${parseInt(day)}`);
-        });
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(',');
+          if (parts.length < 3) continue;
+          
+          const date = parts[0]; // 例: 2025/5/13
+          const time = parts[1]; // 例: 14:00
+          const wbgt = parts[2] ? parseFloat(parts[2]) : null;
+          
+          if (!dailyData[date]) {
+            dailyData[date] = [];
+          }
+          
+          dailyData[date].push({
+            time: time,
+            wbgt: wbgt
+          });
+        }
         
-        // JSONに変換
-        const monitorValues = todayData.map(line => {
-          const parts = line.split(',');
-          return {
-            date: parts[0],
-            time: parts[1],
-            wbgt: parts[2] ? parseFloat(parts[2]) : null,
-            tg: parts[3] ? parseFloat(parts[3]) : null
-          };
-        });
-        
+        // JSONデータを作成
         const jsonData = {
           point: '京都',
-          date: `${year}/${month}/${day}`,
+          location: '京都',
+          updateTime: new Date().toISOString(),
           available: true,
-          monitorValues: monitorValues
+          days: Object.keys(dailyData).map(date => ({
+            date: date,
+            values: dailyData[date]
+          }))
         };
         
-        const jsonPath = path.join(dataDir, 'latest_kyoto_monitor.json');
+        // 最新値を取得
+        let latestWbgt = null;
+        let latestTime = null;
+        let latestDate = null;
+        
+        // 日付の降順でソート
+        const sortedDates = Object.keys(dailyData).sort().reverse();
+        
+        for (const date of sortedDates) {
+          const values = dailyData[date];
+          // 時間の降順でソート
+          const sortedValues = [...values].sort((a, b) => {
+            const timeA = a.time.split(':').map(Number);
+            const timeB = b.time.split(':').map(Number);
+            return (timeB[0] * 60 + timeB[1]) - (timeA[0] * 60 + timeA[1]);
+          });
+          
+          // 最初の有効な値を探す
+          for (const value of sortedValues) {
+            if (value.wbgt !== null) {
+              latestWbgt = value.wbgt;
+              latestTime = value.time;
+              latestDate = date;
+              break;
+            }
+          }
+          
+          if (latestWbgt !== null) break;
+        }
+        
+        // 最新値を追加
+        jsonData.latestWbgt = latestWbgt;
+        jsonData.latestTime = latestTime;
+        jsonData.latestDate = latestDate;
+        
+        const jsonPath = path.join(dataDir, 'latest_monitor_data.json');
         fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
         console.log(`Saved monitor JSON data to ${jsonPath}`);
         
@@ -321,60 +249,46 @@ async function main() {
   try {
     console.log('Starting data fetch process for Kyoto...');
     
-    // 予測値、実況値、府内データ、実測値を取得
-    const predictionData = await fetchKyotoData();
+    // 実況値と実測値を取得
     const actualData = await fetchActualData();
-    const prefectureData = await fetchPrefectureData();
     const monitorData = await fetchMonitorData();
     
     // 最新のWBGT値を特定
     let currentWbgt = null;
-    let dataSource = '予測値';
+    let dataTime = null;
+    let dataDate = null;
+    let dataSource = '実況値';
     
-    // 1. 実測値があればそれを優先（最新の値を取得）
-    if (monitorData.available && monitorData.monitorValues && monitorData.monitorValues.length > 0) {
-      for (let i = monitorData.monitorValues.length - 1; i >= 0; i--) {
-        if (monitorData.monitorValues[i].wbgt !== null) {
-          currentWbgt = monitorData.monitorValues[i].wbgt;
-          dataSource = '実測値';
-          break;
-        }
-      }
+    // 1. 実測値があればそれを優先
+    if (monitorData.available && monitorData.latestWbgt !== null) {
+      currentWbgt = monitorData.latestWbgt;
+      dataTime = monitorData.latestTime;
+      dataDate = monitorData.latestDate;
+      dataSource = '実測値';
+    } 
+    // 2. 実測値がなければ実況値を使用
+    else if (actualData.latestWbgt !== null) {
+      currentWbgt = actualData.latestWbgt;
+      dataTime = actualData.latestTime;
+      dataDate = actualData.latestDate;
+      dataSource = '実況値';
     }
     
-    // 2. 実況値があればそれを次に優先
-    if (currentWbgt === null && actualData.actualValues && actualData.actualValues.length > 0) {
-      for (let i = actualData.actualValues.length - 1; i >= 0; i--) {
-        if (actualData.actualValues[i].wbgt !== null) {
-          currentWbgt = actualData.actualValues[i].wbgt;
-          dataSource = '実況値';
-          break;
-        }
-      }
-    }
-    
-    // 3. それでもなければ予測値を使用
-    if (currentWbgt === null && predictionData.predictions && predictionData.predictions.length > 0) {
-      currentWbgt = predictionData.predictions[0].wbgt;
-      dataSource = '予測値';
-    }
-    
-    // 両方のデータを組み合わせて最新情報を作成
-    const latestData = {
-      point: '京都',
+    // 最終データを作成
+    const finalData = {
+      location: '京都',
       updateTime: new Date().toISOString(),
       currentWbgt: currentWbgt,
+      dataTime: dataTime,
+      dataDate: dataDate,
       dataSource: dataSource,
-      prediction: predictionData,
-      actual: actualData,
-      prefecture: prefectureData,
-      monitor: monitorData
+      hasMonitorData: monitorData.available
     };
     
     // 最新データをJSONとして保存
     const latestPath = path.join(dataDir, 'latest_data.json');
-    fs.writeFileSync(latestPath, JSON.stringify(latestData, null, 2));
-    console.log(`Saved combined data to ${latestPath}`);
+    fs.writeFileSync(latestPath, JSON.stringify(finalData, null, 2));
+    console.log(`Saved final data to ${latestPath}`);
     
     console.log('All data fetched successfully');
   } catch (error) {
@@ -383,7 +297,7 @@ async function main() {
     // エラーが発生しても、最低限のJSONファイルを作成
     try {
       const errorData = {
-        point: '京都',
+        location: '京都',
         updateTime: new Date().toISOString(),
         error: true,
         errorMessage: error.message
