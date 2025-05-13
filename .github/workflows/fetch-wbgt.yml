@@ -1,9 +1,9 @@
-name: Fetch WBGT Data
+name: Fetch Kyoto WBGT Data
 
 on:
   schedule:
-    # 1時間ごとに実行（30分ごとの更新にも対応可能）
-    - cron: '30 * * * *'
+    # 1時間ごとに実行
+    - cron: '35 * * * *'
   # 手動実行用
   workflow_dispatch:
 
@@ -27,5 +27,5 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
           git add data/
-          git commit -m "Update WBGT data $(date +"%Y-%m-%d %H:%M")" || exit 0
+          git commit -m "Update Kyoto WBGT data $(date +"%Y-%m-%d %H:%M")" || exit 0
           git push
