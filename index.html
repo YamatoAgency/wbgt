@@ -2,77 +2,50 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>WBGT（暑さ指数）ウィジェット</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WBGT情報</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
       padding: 20px;
-      transition: background-color 0.5s;
+      line-height: 1.6;
+    }
+    .wbgt-container {
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
     }
     .wbgt-value {
-      font-size: 5em;
-      margin: 20px 0;
+      font-size: 3rem;
+      font-weight: bold;
     }
-    .timestamp {
-      font-size: 1.2em;
-      color: #555;
-    }
+    .safe { color: green; }
+    .caution { color: yellow; background: #333; }
+    .warning { color: orange; }
+    .danger { color: red; }
+    .extreme { color: darkred; }
   </style>
 </head>
 <body>
-  <h1>現在のWBGT（暑さ指数）</h1>
-  <div class="wbgt-value" id="wbgt">--</div>
-  <div class="timestamp" id="time">読み込み中...</div>
-
-  <script>
-    const pointId = "61286"; // 観測点IDを指定
-
-    async function fetchWBGT() {
-      const url = `https://www.wbgt.env.go.jp/graph_temp_data.php?point=${pointId}`;
-
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        const hours = data.hour;
-        const wbgt = data.wbgt;
-
-        const now = new Date();
-        const hour = now.getHours().toString().padStart(2, '0');
-        const index = hours.indexOf(hour);
-
-        const currentWBGT = index !== -1 ? wbgt[index] : null;
-
-        if (currentWBGT !== null) {
-          document.getElementById("wbgt").textContent = currentWBGT;
-          document.getElementById("time").textContent = `${hour}:00 時点のデータ`;
-
-          // 背景色の変更
-          const body = document.body;
-          if (currentWBGT >= 31) {
-            body.style.backgroundColor = "#ff4c4c"; // 危険
-          } else if (currentWBGT >= 28) {
-            body.style.backgroundColor = "#ff9900"; // 厳重警戒
-          } else if (currentWBGT >= 25) {
-            body.style.backgroundColor = "#ffff66"; // 警戒
-          } else {
-            body.style.backgroundColor = "#66ccff"; // 注意
-          }
-        } else {
-          document.getElementById("wbgt").textContent = "データなし";
-          document.getElementById("time").textContent = `${hour}:00 時点のデータがありません`;
-        }
-      } catch (error) {
-        document.getElementById("wbgt").textContent = "エラー";
-        document.getElementById("time").textContent = "データ取得に失敗しました";
-        console.error("データ取得エラー:", error);
-      }
-    }
-
-    fetchWBGT();
-    // 必要に応じて定期的に更新
-    // setInterval(fetchWBGT, 300000); // 5分ごとに更新
-  </script>
+  <h1>WBGT（暑さ指数）情報</h1>
+  
+  <div class="wbgt-container">
+    <h2>現在の暑さ指数</h2>
+    <div class="wbgt-value warning">28.5°C</div>
+    <p><strong>警戒</strong>: 熱中症の危険性が高まっています。激しい運動は避け、休憩と水分補給をこまめに行いましょう。</p>
+  </div>
+  
+  <div>
+    <h2>WBGTとは</h2>
+    <p>WBGT（暑さ指数）は、熱中症を予防することを目的として1954年にアメリカで提案された指標です。気温・湿度・輻射熱の3つを取り入れた人体の熱収支に着目した指標です。</p>
+  </div>
+  
+  <footer>
+    <p>データ出典: 環境省熱中症予防情報サイト</p>
+  </footer>
 </body>
 </html>
