@@ -1,83 +1,81 @@
-/* 基本スタイル */
+/* ベーススタイル */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  font-family: 'Noto Sans JP', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Noto Sans JP', sans-serif;
   line-height: 1.6;
   color: #333;
   background-color: #f8f9fa;
 }
 
-header, main, footer {
-  width: 100%;
-}
-
-.header-content, .footer-content, main > section {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-h1, h2, h3 {
-  font-weight: 700;
-}
-
 /* ヘッダー */
 header {
-  background: linear-gradient(45deg, #1a4e89, #1a6e39);
+  background: linear-gradient(135deg, #1a4e89, #1a6e39);
   color: white;
-  padding: 40px 0;
   text-align: center;
+  padding: 2rem 1rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-  margin: 0;
   font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
 }
 
 .subtitle {
-  margin-top: 10px;
   font-size: 1rem;
   opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+/* メインコンテンツ */
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+section {
+  margin-bottom: 2rem;
 }
 
 /* WBGT表示コンテナ */
 .wbgt-container {
   background-color: white;
   border-radius: 10px;
-  padding: 30px;
-  margin: 20px auto;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
   text-align: center;
 }
 
 .location-info {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .location {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  color: #1a6e39;
 }
 
-.timestamp {
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 5px;
+.data-time {
+  font-size: 1rem;
+  color: #555;
+  margin-top: 0.3rem;
 }
 
 .data-source {
   display: inline-block;
   font-size: 0.8rem;
   background-color: #f0f0f0;
-  padding: 3px 10px;
+  padding: 0.2rem 0.7rem;
   border-radius: 12px;
-  margin-top: 8px;
+  margin-top: 0.5rem;
   color: #555;
 }
 
@@ -85,33 +83,32 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 30px 0;
+  margin: 2rem 0;
 }
 
 .wbgt-value {
-  font-size: 5.5rem;
+  font-size: 5rem;
   font-weight: 700;
-  line-height: 1;
-  margin: 20px 0;
   color: #1a6e39;
+  line-height: 1;
+  margin: 1rem 0;
 }
 
 .wbgt-unit {
-  font-size: 2rem;
+  font-size: 1.8rem;
   vertical-align: super;
 }
 
 .level-container {
-  text-align: center;
-  margin: 15px 0;
+  margin: 1rem 0;
 }
 
 .wbgt-level {
   display: inline-block;
-  padding: 10px 30px;
-  border-radius: 30px;
+  padding: 0.6rem 1.5rem;
+  border-radius: 25px;
   font-weight: 700;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -123,9 +120,9 @@ h1 {
 
 .advice {
   background-color: #f0f8ff;
-  padding: 20px;
+  padding: 1.2rem;
   border-radius: 8px;
-  margin: 25px 0;
+  margin: 1.5rem 0;
   border-left: 5px solid #4682b4;
   text-align: left;
 }
@@ -134,40 +131,25 @@ h1 {
   margin-top: 0;
   color: #4682b4;
   font-size: 1.1rem;
+  font-weight: 500;
 }
 
 .advice p {
-  margin-top: 10px;
-  font-size: 1rem;
+  margin-top: 0.6rem;
 }
 
-/* 予報セクション */
-.forecast-section {
-  background-color: white;
-  border-radius: 10px;
-  padding: 30px;
-  margin: 20px auto;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-}
-
-.forecast-section h2 {
-  margin-bottom: 20px;
-  color: #1a6e39;
-  font-size: 1.5rem;
-}
-
-.chart-container {
-  height: 350px;
-  margin: 20px 0;
+.update-info {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: #777;
 }
 
 /* エラーメッセージ */
 .error {
   color: #d9534f;
   background-color: #f9f2f2;
-  padding: 20px;
+  padding: 1.2rem;
   border-radius: 8px;
-  margin: 20px auto;
   border-left: 5px solid #d9534f;
 }
 
@@ -176,10 +158,10 @@ h1 {
   color: white;
   border: none;
   border-radius: 5px;
-  padding: 10px 20px;
-  font-size: 1rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  margin-top: 15px;
+  margin-top: 0.8rem;
   transition: background-color 0.2s;
 }
 
@@ -196,7 +178,7 @@ h1 {
   border-radius: 50%;
   border-top-color: #1a6e39;
   animation: spin 1s ease-in-out infinite;
-  margin: 20px auto;
+  margin: 1rem auto;
 }
 
 @keyframes spin {
@@ -207,104 +189,101 @@ h1 {
 .info-section {
   background-color: white;
   border-radius: 10px;
-  padding: 30px;
-  margin: 20px auto;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
 }
 
 .info-section h2 {
   color: #1a6e39;
-  margin-bottom: 15px;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
 }
 
 .info-section h3 {
-  margin: 25px 0 15px;
-  font-size: 1.2rem;
-  color: #333;
+  margin: 1.5rem 0 1rem;
+  font-size: 1.1rem;
 }
 
 .info-section p {
-  margin-bottom: 15px;
-  line-height: 1.8;
+  margin-bottom: 1rem;
+  line-height: 1.7;
 }
 
-/* WBGTレベル説明カード */
-.wbgt-levels-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-top: 20px;
+/* WBGT レベル表示 */
+.wbgt-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
-.wbgt-level-card {
-  flex: 1 1 200px;
-  padding: 15px;
+.level-item {
+  padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.level-header {
+.level-range {
   font-weight: 700;
-  font-size: 1.2rem;
-  margin-bottom: 5px;
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
 }
 
-.level-title {
+.level-name {
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 0.6rem;
 }
 
-.level-advice {
- font-size: 0.9rem;
- line-height: 1.5;
+.level-desc {
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 /* フッター */
 footer {
- background-color: #333;
- color: #f5f5f5;
- padding: 30px 0;
- text-align: center;
- margin-top: 50px;
+  text-align: center;
+  padding: 2rem 1rem;
+  background-color: #333;
+  color: #eee;
+  margin-top: 3rem;
 }
 
-.footer-content {
- display: flex;
- flex-direction: column;
- gap: 10px;
+footer a {
+  color: #90ee90;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+.note {
+  font-size: 0.85rem;
+  margin: 0.8rem 0;
+  opacity: 0.8;
 }
 
 .copyright {
- margin-top: 5px;
- font-size: 0.9rem;
- opacity: 0.8;
-}
-
-.disclaimer {
- font-size: 0.8rem;
- opacity: 0.6;
+  font-size: 0.8rem;
+  margin-top: 1rem;
+  opacity: 0.6;
 }
 
 /* レスポンシブデザイン */
-@media (max-width: 768px) {
- h1 {
-   font-size: 1.6rem;
- }
- 
- .wbgt-value {
-   font-size: 4rem;
- }
- 
- .chart-container {
-   height: 250px;
- }
- 
- .wbgt-levels-container {
-   flex-direction: column;
- }
- 
- .wbgt-container, .forecast-section, .info-section {
-   padding: 20px;
- }
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  .wbgt-value {
+    font-size: 4rem;
+  }
+  
+  .wbgt-container, .info-section {
+    padding: 1.5rem;
+  }
+  
+  .wbgt-levels {
+    grid-template-columns: 1fr;
+  }
 }
