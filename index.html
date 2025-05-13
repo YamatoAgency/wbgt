@@ -3,24 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WBGT（暑さ指数）情報 - 京都</title>
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>京都WBGT（暑さ指数）情報</title>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap">
 </head>
 <body>
   <header>
-    <div class="header-content">
-      <h1>京都のWBGT（暑さ指数）情報</h1>
-      <p class="subtitle">熱中症予防のための暑さ指数モニター</p>
-    </div>
+    <h1>京都 WBGT（暑さ指数）情報</h1>
+    <p class="subtitle">熱中症予防のためのリアルタイム情報</p>
   </header>
   
   <main>
     <section class="wbgt-container">
       <div class="location-info">
         <div id="location" class="location">京都</div>
-        <div id="timestamp" class="timestamp">最終更新: 取得中...</div>
-        <div id="data-source" class="data-source"></div>
+        <div id="data-time" class="data-time">観測時刻: 取得中...</div>
+        <div id="data-source" class="data-source">データソース: 取得中...</div>
       </div>
       
       <div id="current-wbgt" class="wbgt-display">
@@ -31,12 +30,9 @@
       <div id="wbgt-level" class="level-container"></div>
       
       <div id="wbgt-advice" class="advice"></div>
-    </section>
-    
-    <section id="forecast" class="forecast-section">
-      <h2>予測</h2>
-      <div id="forecast-chart" class="chart-container">
-        <canvas id="wbgt-chart"></canvas>
+      
+      <div id="update-info" class="update-info">
+        <p>最終更新: <span id="update-time">取得中...</span></p>
       </div>
     </section>
     
@@ -47,52 +43,49 @@
     
     <section class="info-section">
       <h2>WBGTとは</h2>
-      <p>WBGT（暑さ指数・湿球黒球温度）は、熱中症を予防することを目的として開発された指標です。気温、湿度、輻射熱の3つを取り入れた、人体の熱収支に着目した指標で、熱中症予防に有効とされています。</p>
+      <p>WBGT（暑さ指数）は、熱中症を予防することを目的として開発された指標です。気温だけでなく、湿度、輻射熱の3つの要素を取り入れた、人体の熱収支に着目した指標で、熱中症予防に有効とされています。</p>
       
       <h3>WBGT値と注意すべき行動の目安</h3>
-      <div class="wbgt-levels-container">
-        <div class="wbgt-level-card level-safe">
-          <div class="level-header">～21℃</div>
-          <div class="level-title">ほぼ安全</div>
-          <div class="level-advice">通常の活動ができますが、激しい運動時は水分補給を心がけましょう。</div>
+      <div class="wbgt-levels">
+        <div class="level-item level-safe">
+          <div class="level-range">～21℃</div>
+          <div class="level-name">ほぼ安全</div>
+          <div class="level-desc">通常の活動ができますが、激しい運動時は水分補給を心がけましょう。</div>
         </div>
         
-        <div class="wbgt-level-card level-caution">
-          <div class="level-header">21～25℃</div>
-          <div class="level-title">注意</div>
-          <div class="level-advice">運動時は定期的に休憩をとり、水分補給をしましょう。</div>
+        <div class="level-item level-caution">
+          <div class="level-range">21～25℃</div>
+          <div class="level-name">注意</div>
+          <div class="level-desc">運動時は定期的に休憩をとり、水分補給をしましょう。</div>
         </div>
         
-        <div class="wbgt-level-card level-warning">
-          <div class="level-header">25～28℃</div>
-          <div class="level-title">警戒</div>
-          <div class="level-advice">激しい運動を避け、こまめに水分補給をしましょう。</div>
+        <div class="level-item level-warning">
+          <div class="level-range">25～28℃</div>
+          <div class="level-name">警戒</div>
+          <div class="level-desc">激しい運動を避け、こまめに水分補給をしましょう。</div>
         </div>
         
-        <div class="wbgt-level-card level-danger">
-          <div class="level-header">28～31℃</div>
-          <div class="level-title">厳重警戒</div>
-          <div class="level-advice">外出は控え、室内でも室温に注意しましょう。</div>
+        <div class="level-item level-danger">
+          <div class="level-range">28～31℃</div>
+          <div class="level-name">厳重警戒</div>
+          <div class="level-desc">外出は控え、室内でも室温に注意しましょう。</div>
         </div>
         
-        <div class="wbgt-level-card level-extreme">
-          <div class="level-header">31℃～</div>
-          <div class="level-title">危険</div>
-          <div class="level-advice">外出を避け、涼しい室内で過ごしましょう。</div>
+        <div class="level-item level-extreme">
+          <div class="level-range">31℃～</div>
+          <div class="level-name">危険</div>
+          <div class="level-desc">外出を避け、涼しい室内で過ごしましょう。</div>
         </div>
       </div>
     </section>
   </main>
   
   <footer>
-    <div class="footer-content">
-      <p>データ出典: 環境省熱中症予防情報サイト</p>
-      <p class="copyright">&copy; 2025 京都WBGT情報サイト</p>
-      <p class="disclaimer">※本サイトは環境省のデータを利用した非公式サイトです。</p>
-    </div>
+    <p>データ出典: 環境省熱中症予防情報サイト</p>
+    <p class="note">※本サイトは環境省のデータを利用した非公式サイトです。最新の情報は<a href="https://www.wbgt.env.go.jp/" target="_blank" rel="noopener">環境省熱中症予防情報サイト</a>でご確認ください。</p>
+    <p class="copyright">&copy; 2025 京都WBGT情報</p>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
