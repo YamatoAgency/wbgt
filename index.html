@@ -7,22 +7,36 @@
   <style>
     body {
       font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+      line-height: 1.6;
+      color: #333;
       max-width: 800px;
       margin: 0 auto;
       padding: 20px;
-      line-height: 1.6;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
     }
     h1 {
       color: #1a6e39;
-      text-align: center;
     }
     .wbgt-container {
       background-color: #f5f5f5;
       border-radius: 10px;
       padding: 20px;
-      margin: 20px 0;
       text-align: center;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+    .location {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .timestamp {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
     }
     .wbgt-value {
       font-size: 4rem;
@@ -31,7 +45,7 @@
     }
     .wbgt-level {
       display: inline-block;
-      padding: 8px 16px;
+      padding: 8px 20px;
       border-radius: 20px;
       font-weight: bold;
       margin: 10px 0;
@@ -41,8 +55,8 @@
     .level-warning { background-color: #FFA500; color: #000; }
     .level-danger { background-color: #FF4500; color: #fff; }
     .level-extreme { background-color: #800000; color: #fff; }
-    .info {
-      margin-top: 30px;
+    .advice {
+      margin: 20px 0;
     }
     .loading {
       display: inline-block;
@@ -57,36 +71,66 @@
       to { transform: rotate(360deg); }
     }
     .error {
-      color: red;
-      margin: 20px 0;
+      color: #d9534f;
+      background-color: #f9f2f2;
+      padding: 15px;
+      border-radius: 8px;
       display: none;
+    }
+    .info-section {
+      margin-top: 40px;
+    }
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      color: #777;
+      font-size: 0.9rem;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>WBGT（暑さ指数）情報</h1>
+  <header>
+    <h1>WBGT（暑さ指数）情報</h1>
+  </header>
   
   <div class="wbgt-container">
-    <div id="location">場所: ...</div>
-    <div id="timestamp">最終更新: ...</div>
+    <div id="location" class="location">場所: 読み込み中...</div>
+    <div id="timestamp" class="timestamp">最終更新: 読み込み中...</div>
     
     <div id="wbgt-display">
       <div class="loading"></div>
-      <p>データを読み込み中...</p>
+      <p>WBGT情報を取得中...</p>
     </div>
     
-    <div id="advice"></div>
+    <div id="advice" class="advice"></div>
   </div>
   
   <div id="error-message" class="error">
     データの取得に失敗しました。しばらく経ってから再度お試しください。
   </div>
   
-  <div class="info">
+  <div class="info-section">
     <h2>WBGTとは</h2>
-    <p>WBGT（暑さ指数）は、熱中症を予防することを目的として開発された指標です。気温、湿度、輻射熱の3つを取り入れた人体の熱収支に着目した指標で、熱中症予防に有効とされています。</p>
+    <p>WBGT（湿球黒球温度：Wet Bulb Globe Temperature）は、熱中症を予防することを目的として1954年にアメリカで提案された指標です。単なる気温だけでなく、湿度、輻射熱（日差しの強さ）も取り入れた、人体の熱収支に着目した指標です。</p>
+    <p>日本では環境省が熱中症予防情報サイトを通じてWBGT情報を提供しています。</p>
+    
+    <h3>WBGT値と注意すべき行動の目安</h3>
+    <ul>
+      <li><strong>31°C以上（危険）</strong>: 運動は原則中止</li>
+      <li><strong>28〜31°C（厳重警戒）</strong>: 激しい運動は中止</li>
+      <li><strong>25〜28°C（警戒）</strong>: 積極的に休憩</li>
+      <li><strong>21〜25°C（注意）</strong>: 積極的に水分補給</li>
+      <li><strong>21°C未満（ほぼ安全）</strong>: 通常の注意</li>
+    </ul>
   </div>
   
+  <footer>
+    <p>データ出典: 環境省熱中症予防情報サイト</p>
+    <p>&copy; 2025 WBGT Info</p>
+  </footer>
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       fetchWBGTData();
@@ -101,43 +145,48 @@
         const response = await fetch('data/latest-wbgt.json');
         
         if (!response.ok) {
-          throw new Error('データが見つかりませんでした');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
         displayWBGT(data);
       } catch (error) {
-        console.error('データの取得に失敗しました:', error);
+        console.error('Error fetching WBGT data:', error);
         document.getElementById('error-message').style.display = 'block';
         document.getElementById('wbgt-display').innerHTML = '<p>データを取得できませんでした</p>';
       }
     }
     
     function displayWBGT(data) {
+      // エラーメッセージを非表示
+      document.getElementById('error-message').style.display = 'none';
+      
       // 場所と更新時刻を表示
       document.getElementById('location').textContent = `場所: ${data.location}`;
-      document.getElementById('timestamp').textContent = `最終更新: ${formatDate(new Date(data.timestamp))}`;
       
-      // WBGT値を表示
+      const timestamp = new Date(data.timestamp);
+      document.getElementById('timestamp').textContent = `最終更新: ${formatDate(timestamp)}`;
+      
+      // WBGT値の表示
       const wbgtValue = data.wbgt;
       const wbgtDisplay = document.getElementById('wbgt-display');
       
       // WBGT値に基づいて警告レベルを決定
       let level, levelClass, advice;
       
-      if (wbgtValue <= 21) {
+      if (wbgtValue < 21) {
         level = "ほぼ安全";
         levelClass = "level-safe";
         advice = "熱中症の危険性は低いですが、激しい運動時は水分補給を忘れないようにしましょう。";
-      } else if (wbgtValue <= 25) {
+      } else if (wbgtValue < 25) {
         level = "注意";
         levelClass = "level-caution";
         advice = "熱中症の危険性があります。運動時は定期的に休憩を取り、こまめに水分補給をしましょう。";
-      } else if (wbgtValue <= 28) {
+      } else if (wbgtValue < 28) {
         level = "警戒";
         levelClass = "level-warning";
         advice = "熱中症の危険性が高まっています。激しい運動は避け、屋外での長時間の活動は控えましょう。";
-      } else if (wbgtValue <= 31) {
+      } else if (wbgtValue < 31) {
         level = "厳重警戒";
         levelClass = "level-danger";
         advice = "熱中症の危険性が非常に高いです。外出は避け、涼しい場所で過ごしましょう。";
@@ -156,8 +205,14 @@
       // アドバイスを表示
       document.getElementById('advice').innerHTML = `<p>${advice}</p>`;
       
-      // エラーメッセージを非表示
-      document.getElementById('error-message').style.display = 'none';
+      // エラーフラグがある場合は注意書きを表示
+      if (data.error) {
+        wbgtDisplay.innerHTML += `
+          <p style="color: #d9534f; font-size: 0.8rem; margin-top: 10px;">
+            ※現在、データは参考値です。
+          </p>
+        `;
+      }
     }
     
     function formatDate(date) {
