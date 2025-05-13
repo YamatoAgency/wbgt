@@ -3,49 +3,172 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WBGT情報</title>
+  <title>WBGT（暑さ指数）情報</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
       max-width: 800px;
       margin: 0 auto;
       padding: 20px;
       line-height: 1.6;
     }
+    h1 {
+      color: #1a6e39;
+      text-align: center;
+    }
     .wbgt-container {
       background-color: #f5f5f5;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 20px;
       margin: 20px 0;
       text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .wbgt-value {
-      font-size: 3rem;
+      font-size: 4rem;
       font-weight: bold;
+      margin: 20px 0;
     }
-    .safe { color: green; }
-    .caution { color: yellow; background: #333; }
-    .warning { color: orange; }
-    .danger { color: red; }
-    .extreme { color: darkred; }
+    .wbgt-level {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .level-safe { background-color: #90EE90; color: #000; }
+    .level-caution { background-color: #FFFF00; color: #000; }
+    .level-warning { background-color: #FFA500; color: #000; }
+    .level-danger { background-color: #FF4500; color: #fff; }
+    .level-extreme { background-color: #800000; color: #fff; }
+    .info {
+      margin-top: 30px;
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0,0,0,.3);
+      border-radius: 50%;
+      border-top-color: #1a6e39;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .error {
+      color: red;
+      margin: 20px 0;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h1>WBGT（暑さ指数）情報</h1>
   
   <div class="wbgt-container">
-    <h2>現在の暑さ指数</h2>
-    <div class="wbgt-value warning">28.5°C</div>
-    <p><strong>警戒</strong>: 熱中症の危険性が高まっています。激しい運動は避け、休憩と水分補給をこまめに行いましょう。</p>
+    <div id="location">場所: ...</div>
+    <div id="timestamp">最終更新: ...</div>
+    
+    <div id="wbgt-display">
+      <div class="loading"></div>
+      <p>データを読み込み中...</p>
+    </div>
+    
+    <div id="advice"></div>
   </div>
   
-  <div>
+  <div id="error-message" class="error">
+    データの取得に失敗しました。しばらく経ってから再度お試しください。
+  </div>
+  
+  <div class="info">
     <h2>WBGTとは</h2>
-    <p>WBGT（暑さ指数）は、熱中症を予防することを目的として1954年にアメリカで提案された指標です。気温・湿度・輻射熱の3つを取り入れた人体の熱収支に着目した指標です。</p>
+    <p>WBGT（暑さ指数）は、熱中症を予防することを目的として開発された指標です。気温、湿度、輻射熱の3つを取り入れた人体の熱収支に着目した指標で、熱中症予防に有効とされています。</p>
   </div>
   
-  <footer>
-    <p>データ出典: 環境省熱中症予防情報サイト</p>
-  </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchWBGTData();
+      
+      // 30分ごとにデータを更新
+      setInterval(fetchWBGTData, 30 * 60 * 1000);
+    });
+    
+    async function fetchWBGTData() {
+      try {
+        // GitHub Actionsで生成されたJSONファイルを取得
+        const response = await fetch('data/latest-wbgt.json');
+        
+        if (!response.ok) {
+          throw new Error('データが見つかりませんでした');
+        }
+        
+        const data = await response.json();
+        displayWBGT(data);
+      } catch (error) {
+        console.error('データの取得に失敗しました:', error);
+        document.getElementById('error-message').style.display = 'block';
+        document.getElementById('wbgt-display').innerHTML = '<p>データを取得できませんでした</p>';
+      }
+    }
+    
+    function displayWBGT(data) {
+      // 場所と更新時刻を表示
+      document.getElementById('location').textContent = `場所: ${data.location}`;
+      document.getElementById('timestamp').textContent = `最終更新: ${formatDate(new Date(data.timestamp))}`;
+      
+      // WBGT値を表示
+      const wbgtValue = data.wbgt;
+      const wbgtDisplay = document.getElementById('wbgt-display');
+      
+      // WBGT値に基づいて警告レベルを決定
+      let level, levelClass, advice;
+      
+      if (wbgtValue <= 21) {
+        level = "ほぼ安全";
+        levelClass = "level-safe";
+        advice = "熱中症の危険性は低いですが、激しい運動時は水分補給を忘れないようにしましょう。";
+      } else if (wbgtValue <= 25) {
+        level = "注意";
+        levelClass = "level-caution";
+        advice = "熱中症の危険性があります。運動時は定期的に休憩を取り、こまめに水分補給をしましょう。";
+      } else if (wbgtValue <= 28) {
+        level = "警戒";
+        levelClass = "level-warning";
+        advice = "熱中症の危険性が高まっています。激しい運動は避け、屋外での長時間の活動は控えましょう。";
+      } else if (wbgtValue <= 31) {
+        level = "厳重警戒";
+        levelClass = "level-danger";
+        advice = "熱中症の危険性が非常に高いです。外出は避け、涼しい場所で過ごしましょう。";
+      } else {
+        level = "危険";
+        levelClass = "level-extreme";
+        advice = "熱中症の危険性が極めて高いです。屋外での活動は原則中止しましょう。";
+      }
+      
+      // WBGT値とレベルを表示
+      wbgtDisplay.innerHTML = `
+        <div class="wbgt-value">${wbgtValue}${data.unit}</div>
+        <div class="wbgt-level ${levelClass}">${level}</div>
+      `;
+      
+      // アドバイスを表示
+      document.getElementById('advice').innerHTML = `<p>${advice}</p>`;
+      
+      // エラーメッセージを非表示
+      document.getElementById('error-message').style.display = 'none';
+    }
+    
+    function formatDate(date) {
+      return new Intl.DateTimeFormat('ja-JP', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    }
+  </script>
 </body>
 </html>
