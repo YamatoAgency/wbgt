@@ -71,21 +71,74 @@ async function fetchWBGTWithProxy() {
             }
           }
           
-          // 更新時間を含む行を探す
-          if (rowText.includes('時点') || rowText.includes('更新')) {
-            // 日時パターンを抽出（例: 2023年5月15日 14:00）
-            const timeMatches = rowText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})/);
-            if (timeMatches) {
-              const [_, year, month, day, hour, minute] = timeMatches;
-              // 日本時間として解釈
-              updateTime = new Date(
-                parseInt(year),
-                parseInt(month) - 1,
-                parseInt(day),
-                parseInt(hour),
-                parseInt(minute)
-              ).toISOString();
-              console.log(`Found update time: ${updateTime}`);
+         // 更新時間を探す - 複数のパターンに対応
+let updateTime = null;
+
+// パターン1: 一般的な日本語の日付形式（2023年5月15日 14:00）
+$('*').each((i, elem) => {
+  const text = $(elem).text().trim();
+  if (text.includes('時点') || text.includes('更新') || text.includes('測定')) {
+    // 日本語の日付パターンを抽出
+    const timeMatches = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})/);
+    if (timeMatches) {
+      const [_, year, month, day, hour, minute] = timeMatches;
+      // 日本時間として解釈
+      updateTime = new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hour),
+        parseInt(minute)
+      ).toISOString();
+      console.log(`Found update time (pattern 1): ${updateTime}`);
+    }
+  }
+});
+
+// パターン2: 別の日付形式を探す（例: 2023/05/15 14:00）
+if (!updateTime) {
+  $('*').each((i, elem) => {
+    const text = $(elem).text().trim();
+    if (text.includes('時点') || text.includes('更新') || text.includes('測定') || text.includes('観測')) {
+      const timeMatches = text.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})\s*(\d{1,2}):(\d{2})/);
+      if (timeMatches) {
+        const [_, year, month, day, hour, minute] = timeMatches;
+        updateTime = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+          parseInt(hour),
+          parseInt(minute)
+        ).toISOString();
+        console.log(`Found update time (pattern 2): ${updateTime}`);
+      }
+    }
+  });
+}
+
+// パターン3: 時刻のみの場合（例: 14:00現在）
+if (!updateTime) {
+  $('*').each((i, elem) => {
+    const text = $(elem).text().trim();
+    const timeOnly = text.match(/(\d{1,2}):(\d{2})(?:現在|時点|更新)/);
+    if (timeOnly) {
+      const [_, hour, minute] = timeOnly;
+      // 現在の日付に、見つかった時刻を設定
+      const now = new Date();
+      now.setHours(parseInt(hour));
+      now.setMinutes(parseInt(minute));
+      now.setSeconds(0);
+      now.setMilliseconds(0);
+      updateTime = now.toISOString();
+      console.log(`Found time only (pattern 3): ${updateTime}`);
+    }
+  });
+}
+
+// 更新時間が見つからない場合は現在時刻を使用
+if (!updateTime) {
+  updateTime = new Date().toISOString();
+  console.log(`No update time found, using current time: ${updateTime}`);
             }
           }
         });
