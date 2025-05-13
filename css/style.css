@@ -256,3 +256,55 @@ h1 {
 }
 
 .level-advice {
+ font-size: 0.9rem;
+ line-height: 1.5;
+}
+
+/* フッター */
+footer {
+ background-color: #333;
+ color: #f5f5f5;
+ padding: 30px 0;
+ text-align: center;
+ margin-top: 50px;
+}
+
+.footer-content {
+ display: flex;
+ flex-direction: column;
+ gap: 10px;
+}
+
+.copyright {
+ margin-top: 5px;
+ font-size: 0.9rem;
+ opacity: 0.8;
+}
+
+.disclaimer {
+ font-size: 0.8rem;
+ opacity: 0.6;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+ h1 {
+   font-size: 1.6rem;
+ }
+ 
+ .wbgt-value {
+   font-size: 4rem;
+ }
+ 
+ .chart-container {
+   height: 250px;
+ }
+ 
+ .wbgt-levels-container {
+   flex-direction: column;
+ }
+ 
+ .wbgt-container, .forecast-section, .info-section {
+   padding: 20px;
+ }
+}
