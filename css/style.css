@@ -1,0 +1,198 @@
+/* 全体のスタイル */
+body {
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+}
+
+header, main, .info-section, footer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  background-color: #1a6e39;
+  color: white;
+  padding: 30px 20px;
+  margin-bottom: 20px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+/* WBGT表示コンテナ */
+.wbgt-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+.location-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.location {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.timestamp {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.wbgt-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.wbgt-value {
+  font-size: 5rem;
+  font-weight: bold;
+  line-height: 1;
+  margin: 15px 0;
+  color: #1a6e39;
+}
+
+.wbgt-unit {
+  font-size: 2rem;
+  vertical-align: super;
+}
+
+.level-container {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.wbgt-level {
+  display: inline-block;
+  padding: 8px 25px;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.level-safe { background-color: #90EE90; color: #000; }
+.level-caution { background-color: #FFFF00; color: #000; }
+.level-warning { background-color: #FFA500; color: #000; }
+.level-danger { background-color: #FF4500; color: #fff; }
+.level-extreme { background-color: #800000; color: #fff; }
+
+.advice {
+  background-color: #f0f8ff;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border-left: 5px solid #4682b4;
+}
+
+.advice h3 {
+  margin-top: 0;
+  color: #4682b4;
+}
+
+/* 予報セクション */
+.forecast {
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container {
+  height: 300px;
+  margin: 20px 0;
+}
+
+/* エラーメッセージ */
+.error {
+  color: #d9534f;
+  background-color: #f9f2f2;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border-left: 5px solid #d9534f;
+}
+
+.retry-button {
+  background-color: #1a6e39;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background-color: #145a2e;
+}
+
+/* ローディングアニメーション */
+.loading {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(26, 110, 57, 0.3);
+  border-radius: 50%;
+  border-top-color: #1a6e39;
+  animation: spin 1s ease-in-out infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* WBGTレベル説明 */
+.wbgt-levels {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.wbgt-levels li {
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+/* フッター */
+footer {
+  text-align: center;
+  color: #777;
+  font-size: 0.9rem;
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  .wbgt-value {
+    font-size: 4rem;
+  }
+  
+  .chart-container {
+    height: 200px;
+  }
+}
