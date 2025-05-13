@@ -1,10 +1,10 @@
-name: Fetch WBGT Data
+name: Fetch WBGT Data using Proxy
 
 on:
   schedule:
-    # 1時間ごとに実行 (UTC時間で毎時0分)
-    - cron: '0 * * * *'
-  # 手動で実行するためのトリガーも追加
+    # 3時間ごとに実行（0時、3時、6時...）
+    - cron: '0 0/3 * * *'
+  # 手動実行も可能に
   workflow_dispatch:
 
 jobs:
@@ -20,15 +20,17 @@ jobs:
           node-version: '16'
       
       - name: Install dependencies
-        run: npm install axios cheerio
+        run: npm install
       
-      - name: Fetch WBGT data
-        run: node scripts/fetch-wbgt.js
+      - name: Fetch WBGT data using proxy
+        env:
+          SCRAPING_BEE_API_KEY: ${{ secrets.SCRAPING_BEE_API_KEY }}
+        run: node scripts/fetch-wbgt-proxy.js
       
       - name: Commit and push changes
         run: |
           git config --global user.email "github-actions@github.com"
-          git config --global user.name "GitHub Actions Bot"
+          git config --global user.name "GitHub Actions"
           git add data/
           git commit -m "Update WBGT data $(date +"%Y-%m-%d %H:%M")" || exit 0
           git push
