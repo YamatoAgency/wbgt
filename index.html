@@ -1,91 +1,351 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>京都WBGT（暑さ指数）情報</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>京都WBGT情報</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #0099cc;
+            padding-bottom: 10px;
+        }
+        .wbgt-container {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .wbgt-current {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .wbgt-value {
+            font-size: 36px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .wbgt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .wbgt-table th, .wbgt-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .wbgt-table th {
+            background-color: #f2f2f2;
+        }
+        .wbgt-danger {
+            background-color: #ff4d4d;
+            color: white;
+        }
+        .wbgt-warning {
+            background-color: #ffaa00;
+            color: white;
+        }
+        .wbgt-caution {
+            background-color: #ffff00;
+            color: black;
+        }
+        .wbgt-safe {
+            background-color: #66cc00;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+        }
+        .error-message {
+            color: red;
+            padding: 10px;
+            background-color: #ffeeee;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .last-updated {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>京都 WBGT（暑さ指数）情報</h1>
-    <p class="subtitle">熱中症予防のためのリアルタイム情報</p>
-  </header>
-  
-  <main>
-    <section class="wbgt-container">
-      <div class="location-info">
-        <div id="location" class="location">京都</div>
-        <div id="data-time" class="data-time">観測時刻: 取得中...</div>
-        <div id="data-source" class="data-source">データソース: 取得中...</div>
-      </div>
-      
-      <div id="current-wbgt" class="wbgt-display">
-        <div class="loading"></div>
-        <p>データを取得中...</p>
-      </div>
-      
-      <div id="wbgt-level" class="level-container"></div>
-      
-      <div id="wbgt-advice" class="advice"></div>
-      
-      <div id="update-info" class="update-info">
-        <p>最終更新: <span id="update-time">取得中...</span></p>
-      </div>
-    </section>
+    <h1>京都のWBGT情報（暑さ指数）</h1>
     
-    <section id="error-message" class="error" style="display:none">
-      <p>データの取得に失敗しました。しばらく経ってから再度お試しください。</p>
-      <button id="retry-button" class="retry-button">再読み込み</button>
-    </section>
-    
-    <section class="info-section">
-      <h2>WBGTとは</h2>
-      <p>WBGT（暑さ指数）は、熱中症を予防することを目的として開発された指標です。気温だけでなく、湿度、輻射熱の3つの要素を取り入れた、人体の熱収支に着目した指標で、熱中症予防に有効とされています。</p>
-      
-      <h3>WBGT値と注意すべき行動の目安</h3>
-      <div class="wbgt-levels">
-        <div class="level-item level-safe">
-          <div class="level-range">～21℃</div>
-          <div class="level-name">ほぼ安全</div>
-          <div class="level-desc">通常の活動ができますが、激しい運動時は水分補給を心がけましょう。</div>
-        </div>
+    <div class="wbgt-container">
+        <div id="current-datetime"></div>
+        <div id="wbgt-loading" class="loading">データを読み込み中...</div>
+        <div id="wbgt-error" class="error-message" style="display:none;"></div>
         
-        <div class="level-item level-caution">
-          <div class="level-range">21～25℃</div>
-          <div class="level-name">注意</div>
-          <div class="level-desc">運動時は定期的に休憩をとり、水分補給をしましょう。</div>
+        <div id="wbgt-data" style="display:none;">
+            <div class="wbgt-current">現在のWBGT: <span id="current-wbgt"></span></div>
+            <div>
+                <span id="wbgt-value-display" class="wbgt-value">--°C</span>
+            </div>
+            <div id="wbgt-message"></div>
+            
+            <h3>本日の予測</h3>
+            <div id="today-forecast"></div>
+            
+            <h3>時間別WBGT（過去24時間）</h3>
+            <table class="wbgt-table">
+                <thead>
+                    <tr>
+                        <th>時刻</th>
+                        <th>WBGT (°C)</th>
+                        <th>危険度</th>
+                    </tr>
+                </thead>
+                <tbody id="wbgt-table-body">
+                    <!-- ここにデータが入ります -->
+                </tbody>
+            </table>
+            <div class="last-updated">最終更新: <span id="last-updated-time"></span></div>
         </div>
-        
-        <div class="level-item level-warning">
-          <div class="level-range">25～28℃</div>
-          <div class="level-name">警戒</div>
-          <div class="level-desc">激しい運動を避け、こまめに水分補給をしましょう。</div>
-        </div>
-        
-        <div class="level-item level-danger">
-          <div class="level-range">28～31℃</div>
-          <div class="level-name">厳重警戒</div>
-          <div class="level-desc">外出は控え、室内でも室温に注意しましょう。</div>
-        </div>
-        
-        <div class="level-item level-extreme">
-          <div class="level-range">31℃～</div>
-          <div class="level-name">危険</div>
-          <div class="level-desc">外出を避け、涼しい室内で過ごしましょう。</div>
-        </div>
-      </div>
-    </section>
-  </main>
-  
-  <footer>
-    <p>データ出典: 環境省熱中症予防情報サイト</p>
-    <p class="note">※本サイトは環境省のデータを利用した非公式サイトです。最新の情報は<a href="https://www.wbgt.env.go.jp/" target="_blank" rel="noopener">環境省熱中症予防情報サイト</a>でご確認ください。</p>
-    <p class="copyright">&copy; 2025 京都WBGT情報</p>
-  </footer>
+    </div>
 
-  <script src="js/app.js"></script>
+    <script>
+        // WBGT値の危険度判定
+        function getWbgtRiskLevel(wbgt) {
+            if (wbgt >= 31) return { level: "危険", class: "wbgt-danger" };
+            if (wbgt >= 28) return { level: "厳重警戒", class: "wbgt-warning" };
+            if (wbgt >= 25) return { level: "警戒", class: "wbgt-caution" };
+            return { level: "注意", class: "wbgt-safe" };
+        }
+
+        // 現在の日時を取得
+        function updateCurrentDateTime() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long',
+                hour: '2-digit', 
+                minute: '2-digit'
+            };
+            document.getElementById('current-datetime').textContent = 
+                now.toLocaleDateString('ja-JP', options);
+        }
+
+        // CSVデータを取得する関数
+        async function fetchWbgtData() {
+            try {
+                // エラー表示をクリア
+                document.getElementById('wbgt-error').style.display = 'none';
+                
+                // 現在の年月を取得してURLを作成
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const csvUrl = `https://www.wbgt.env.go.jp/mntr/dl/Kyoto_${year}${month}.csv`;
+                
+                console.log(`データを取得中: ${csvUrl}`);
+                
+                // CSVデータを取得
+                const response = await fetch(csvUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`データの取得に失敗しました (${response.status})`);
+                }
+                
+                const csvText = await response.text();
+                return processCsvData(csvText);
+                
+            } catch (error) {
+                console.error('データ取得エラー:', error);
+                document.getElementById('wbgt-loading').style.display = 'none';
+                document.getElementById('wbgt-error').textContent = `エラーが発生しました: ${error.message}`;
+                document.getElementById('wbgt-error').style.display = 'block';
+                return null;
+            }
+        }
+
+        // CSVデータを処理する関数
+        function processCsvData(csvText) {
+            const lines = csvText.split('\n');
+            
+            // ヘッダー行を確認（1行目はタイトル、2行目がヘッダー）
+            if (lines.length < 3) {
+                throw new Error('CSVデータの形式が不正です');
+            }
+            
+            // ヘッダーから列インデックスを特定
+            const headers = lines[1].split(',');
+            const dateIndex = headers.findIndex(h => h.includes('年月日'));
+            const timeIndex = headers.findIndex(h => h.includes('時'));
+            const wbgtIndex = headers.findIndex(h => h.includes('WBGT'));
+            
+            if (dateIndex === -1 || timeIndex === -1 || wbgtIndex === -1) {
+                throw new Error('CSVデータに必要な列がありません');
+            }
+            
+            // データ行を処理
+            const data = [];
+            for (let i = 2; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const columns = line.split(',');
+                if (columns.length <= Math.max(dateIndex, timeIndex, wbgtIndex)) continue;
+                
+                const dateStr = columns[dateIndex];
+                const timeStr = columns[timeIndex];
+                const wbgtStr = columns[wbgtIndex];
+                
+                // 日付と時間の処理
+                const dateParts = dateStr.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+                if (!dateParts) continue;
+                
+                const date = new Date(
+                    parseInt(dateParts[1]), 
+                    parseInt(dateParts[2]) - 1, 
+                    parseInt(dateParts[3]), 
+                    parseInt(timeStr)
+                );
+                
+                // WBGTデータの処理
+                const wbgt = parseFloat(wbgtStr);
+                if (isNaN(wbgt)) continue;
+                
+                data.push({
+                    date,
+                    time: parseInt(timeStr),
+                    wbgt
+                });
+            }
+            
+            // 日付の降順、時間の降順でソート
+            data.sort((a, b) => {
+                if (a.date.toDateString() !== b.date.toDateString()) {
+                    return b.date - a.date;
+                }
+                return b.time - a.time;
+            });
+            
+            return data;
+        }
+
+        // データを画面に表示する関数
+        function displayWbgtData(wbgtData) {
+            if (!wbgtData || wbgtData.length === 0) {
+                return;
+            }
+            
+            // 現在時刻に最も近いデータを取得
+            const now = new Date();
+            let closestData = wbgtData[0];
+            let minTimeDiff = Infinity;
+            
+            for (const data of wbgtData) {
+                const timeDiff = Math.abs(now - data.date);
+                if (timeDiff < minTimeDiff) {
+                    minTimeDiff = timeDiff;
+                    closestData = data;
+                }
+            }
+            
+            // 現在のWBGT値を表示
+            const currentWbgt = closestData.wbgt;
+            const riskLevel = getWbgtRiskLevel(currentWbgt);
+            
+            document.getElementById('current-wbgt').textContent = 
+                `${currentWbgt.toFixed(1)}°C (${riskLevel.level})`;
+            
+            const wbgtValueDisplay = document.getElementById('wbgt-value-display');
+            wbgtValueDisplay.textContent = `${currentWbgt.toFixed(1)}°C`;
+            wbgtValueDisplay.className = `wbgt-value ${riskLevel.class}`;
+            
+            // メッセージを表示
+            let message = '';
+            if (riskLevel.level === '危険') {
+                message = '熱中症の危険性が極めて高いです。外出を控え、涼しい場所で過ごしましょう。';
+            } else if (riskLevel.level === '厳重警戒') {
+                message = '熱中症の危険性が高いです。激しい運動は避け、こまめに水分補給をしましょう。';
+            } else if (riskLevel.level === '警戒') {
+                message = '熱中症の危険性があります。適宜休憩と水分補給を心がけましょう。';
+            } else {
+                message = '熱中症の可能性があります。無理せず水分補給をしましょう。';
+            }
+            document.getElementById('wbgt-message').textContent = message;
+            
+            // 時間別データをテーブルに表示（最新24時間分）
+            const tableBody = document.getElementById('wbgt-table-body');
+            tableBody.innerHTML = '';
+            
+            // 最新24件のデータを表示
+            const displayData = wbgtData.slice(0, 24);
+            
+            for (const data of displayData) {
+                const row = document.createElement('tr');
+                
+                const timeCell = document.createElement('td');
+                const dateOptions = { month: 'numeric', day: 'numeric' };
+                const timeOptions = { hour: '2-digit', minute: '2-digit' };
+                timeCell.textContent = 
+                    `${data.date.toLocaleDateString('ja-JP', dateOptions)} ${data.date.toLocaleTimeString('ja-JP', timeOptions)}`;
+                
+                const wbgtCell = document.createElement('td');
+                wbgtCell.textContent = data.wbgt.toFixed(1);
+                
+                const riskCell = document.createElement('td');
+                const risk = getWbgtRiskLevel(data.wbgt);
+                riskCell.textContent = risk.level;
+                riskCell.className = risk.class;
+                
+                row.appendChild(timeCell);
+                row.appendChild(wbgtCell);
+                row.appendChild(riskCell);
+                tableBody.appendChild(row);
+            }
+            
+            // 更新時間を表示
+            document.getElementById('last-updated-time').textContent = 
+                new Date().toLocaleString('ja-JP');
+            
+            // データ表示エリアを表示
+            document.getElementById('wbgt-loading').style.display = 'none';
+            document.getElementById('wbgt-data').style.display = 'block';
+        }
+
+        // ページ読み込み時の処理
+        async function initPage() {
+            updateCurrentDateTime();
+            
+            // WBGTデータを取得して表示
+            const wbgtData = await fetchWbgtData();
+            displayWbgtData(wbgtData);
+            
+            // 1時間ごとに更新
+            setInterval(async () => {
+                updateCurrentDateTime();
+                const updatedData = await fetchWbgtData();
+                displayWbgtData(updatedData);
+            }, 3600000); // 1時間 = 3600000ミリ秒
+            
+            // 1分ごとに現在時刻を更新
+            setInterval(updateCurrentDateTime, 60000);
+        }
+
+        // ページ読み込み完了時に初期化処理を実行
+        window.addEventListener('DOMContentLoaded', initPage);
+    </script>
 </body>
 </html>
