@@ -8,58 +8,90 @@ on:
 jobs:
   update-data:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # リポジトリへの書き込み権限を明示的に設定
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.10'
           
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests pandas
           
-      - name: Fetch WBGT data
+      - name: Create WBGT update script
         run: |
-          python -c '
-import requests
-import pandas as pd
-from datetime import datetime
-import os
+          cat << 'EOF' > update_wbgt.py
+          import requests
+          import pandas as pd
+          from datetime import datetime
+          import os
+          import sys
 
-# 現在の年月を取得
-now = datetime.now()
-year_month = now.strftime("%Y%m")
+          # 現在の年月を取得
+          now = datetime.now()
+          year_month = now.strftime("%Y%m")
 
-# URLを作成
-url = f"https://www.wbgt.env.go.jp/mntr/dl/Kyoto_{year_month}.csv"
+          # URLを作成
+          url = f"https://www.wbgt.env.go.jp/mntr/dl/Kyoto_{year_month}.csv"
+          print(f"データを取得中: {url}")
 
-try:
-    # データを取得
-    response = requests.get(url)
-    response.raise_for_status()
-    
-    # データディレクトリを作成（存在しない場合）
-    os.makedirs("data", exist_ok=True)
-    
-    # CSVファイルとして保存
-    with open(f"data/latest_wbgt.csv", "wb") as f:
-        f.write(response.content)
-    
-    print(f"データを更新しました: {url}")
-    
-except Exception as e:
-    print(f"エラーが発生しました: {e}")
-          '
+          try:
+              # データを取得
+              response = requests.get(url)
+              response.raise_for_status()
+              
+              # データディレクトリを作成（存在しない場合）
+              os.makedirs("data", exist_ok=True)
+              
+              # CSVファイルとして保存
+              with open("data/latest_wbgt.csv", "wb") as f:
+                  f.write(response.content)
+              
+              print(f"データを更新しました: {url}")
+              
+          except Exception as e:
+              print(f"エラーが発生しました: {e}")
+              sys.exit(1)
+          EOF
+      
+      - name: Run WBGT update script
+        id: fetch-data
+        run: python update_wbgt.py
           
-      - name: Commit and push if data changed
+      - name: Debug directory structure
+        if: always()
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory listing:"
+          ls -la
+          echo "Data directory:"
+          ls -la data || echo "Data directory does not exist"
+          
+      - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data/latest_wbgt.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update WBGT data - $(date '+%Y-%m-%d %H:%M:%S')"
-          git push
+          
+          # dataディレクトリが存在しなければ作成
+          mkdir -p data
+          
+          # 変更があるか確認
+          if [ -f "data/latest_wbgt.csv" ]; then
+            git add data/latest_wbgt.csv
+            if git diff --staged --quiet; then
+              echo "No changes to commit"
+            else
+              git commit -m "Update WBGT data - $(date '+%Y-%m-%d %H:%M:%S')"
+              git push
+            fi
+          else
+            echo "Warning: data/latest_wbgt.csv does not exist"
+          fi
